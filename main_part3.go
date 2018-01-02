@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/gob"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"log"
@@ -13,6 +13,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+
 	"github.com/boltdb/bolt"
 )
 
@@ -73,7 +74,7 @@ func DeserializeBlock(d []byte) *Block {
 
 type Blockchain struct {
 	tip []byte
-	db *bolt.DB
+	db  *bolt.DB
 }
 
 func (bc *Blockchain) AddBlock(data string) {
@@ -140,24 +141,24 @@ func NewBlockchain() *Blockchain {
 			tip = b.Get([]byte("l"))
 		}
 
-		return  nil
+		return nil
 	})
 	if err != nil {
 		log.Panic(err)
 	}
 
-	bc := Blockchain{ tip, db }
+	bc := Blockchain{tip, db}
 	return &bc
 }
 
 func (bc *Blockchain) Iterator() *BlockchainIterator {
-	bci := &BlockchainIterator{ bc.tip, bc.db }
+	bci := &BlockchainIterator{bc.tip, bc.db}
 	return bci
 }
 
 type BlockchainIterator struct {
 	currentHash []byte
-	db *bolt.DB
+	db          *bolt.DB
 }
 
 func (i *BlockchainIterator) Next() *Block {
@@ -178,7 +179,6 @@ func (i *BlockchainIterator) Next() *Block {
 
 	return block
 }
-
 
 type ProofOfWork struct {
 	block  *Block
@@ -274,7 +274,7 @@ func (cli *CLI) Run() {
 	cli.validateArgs()
 
 	addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
-	printChainCmd  := flag.NewFlagSet("printchain", flag.ExitOnError)
+	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 
 	addBlockData := addBlockCmd.String("data", "", "Block data")
 
@@ -295,7 +295,7 @@ func (cli *CLI) Run() {
 	}
 
 	if addBlockCmd.Parsed() {
-		if *addBlockData ==  "" {
+		if *addBlockData == "" {
 			addBlockCmd.Usage()
 			os.Exit(1)
 		}
@@ -320,7 +320,7 @@ func (cli *CLI) printChain() {
 		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
 		fmt.Printf("Data: %s\n", block.Data)
 		fmt.Printf("Hash: %x\n", block.Hash)
-		pow  := NewProofOfWork(block)
+		pow := NewProofOfWork(block)
 		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
 		fmt.Println()
 
