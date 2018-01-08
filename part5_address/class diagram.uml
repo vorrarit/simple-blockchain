@@ -1,0 +1,52 @@
+@startuml
+class Transaction {
+	ID: byte[]
+	Vin: TXInput[]
+	Vout: TXOutput[]
+	bool IsCoinbase()
+	byte[] Serialize()
+	byte[] Hash()
+	void Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transaction)
+	string String()
+	Transaction TrimmedCopy()
+	bool Verify(prevTXs map[string]Transaction)
+	{static} (*)Transaction NewCoinbaseTX(to, data string)
+	{static} (*)Transaction NewUTXOTransaction(from, to string, amount int, bc *Blockchain)
+}
+class TXInput {
+	Txid: byte[]
+	Vout: int
+	Signature: byte[]
+	PubKey: byte[]
+	bool UsesKey(pubKeyHash byte[])
+}
+class TXOutput {
+	Value: int
+	PubKeyHash: byte[]
+	void Lock(address byte[])
+	bool IsLockedWithKey(pubKeyHash byte[])
+	{static} (*)TXOutput NewTXOutput(int value, string address)
+}
+class Wallets {
+	Wallets map[string]*Wallet
+	{static} (*Wallets, error) NewWallets()
+	string CreateWallet()
+	string[] GetAddresses()
+	Wallet GetWallet(string address)
+	error LoadFromFile()
+	void SaveToFile()
+}
+class Wallet {
+	PrivateKey ecdsa.PrivateKey
+	PublicKey byte[]
+	{static} (*)Wallet NewWallet()
+	byte[] GetAddress()
+	byte[] HashPubKey(pubKey []byte)
+	bool ValidateAddress(string address)
+	{static} byte[] checksum(payload byte[])
+	{static} (ecdsa.PrivateKey, byte[]) newKeyPair()
+}
+Transaction "1" *-- "many" TXInput : contains
+Transaction "1" *-- "many" TXOutput : contains
+Wallets "1" o-- "many" Wallet : contains
+@enduml
