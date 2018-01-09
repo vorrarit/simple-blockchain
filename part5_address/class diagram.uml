@@ -46,6 +46,20 @@ class Wallet {
 	{static} byte[] checksum(payload byte[])
 	{static} (ecdsa.PrivateKey, byte[]) newKeyPair()
 }
+class Blockchain {
+	tip byte[]
+	db *bolt.DB
+	{static} (*)Blockchain CreateBlockchain(string address)
+	{static} (*)Blockchain NewBlockchain(string address)
+	(int, map[string][]int) FindSpendableOutputs(byte[] pubKeyHash, int amount)
+	Transaction[] FindUnspentTransaction(byte[] pubKeyHash)
+	TXOutput[] FindUTXO(byte[] pubKeyHash)
+	(Transaction, error) FindTransaction(ID byte[])
+	(*)BlockchainIterator Iterator()
+	void MineBlock(*Transaction[] transactions)
+	void SignTransaction(*Transaction tx, ecdsa.PrivateKey privKey)
+	bool VerifyTransaction(*Transaction tx)
+}
 Transaction "1" *-- "many" TXInput : contains
 Transaction "1" *-- "many" TXOutput : contains
 Wallets "1" o-- "many" Wallet : contains
