@@ -1,0 +1,53 @@
+@startuml
+participant "cli" as cli << CLI >>
+participant "bc" as bc << Blockchain >>
+participant "UTXOSet" as UTXOSet << UTXOSet >>
+participant "validOutputs" as validOutputs << map(txId)TXOutput[] >>
+participant "Transaction" as Transaction << Transaction >>
+participant "inputs" as inputs << TXInput[] >>
+participant "outputs" as outputs << TXOutput[] >>
+participant "input" as input << TXInput >>
+participant "tx" as tx << Transaction >>
+participant "cbTx" as cbTx << Transaction >>
+participant "txs" as txs << Transaction[] >>
+participant "newBlock" as newBlock << Block >>
+participant "wallets" as wallets << Wallets >>
+create cli
+-> cli: from, to, amount
+create bc
+cli -> bc:Blockchain: NewBlockchain()
+create UTXOSet
+cli -> UTXOSet: UTXOSet(bc)
+cli -> Transaction: NewUTXOTransaction(from, to, amount, &UTXOSet)
+create inputs
+Transaction -> inputs: new
+create outputs
+Transaction -> outputs: new
+create wallets
+Transaction -> wallets: NewWallets()
+Transaction -> wallets: GetWallet(from)
+Transaction -> UTXOSet: FindSpendableOutputs(HashPubKey(wallet.PublicKey))
+create validOutputs
+UTXOSet -> validOutputs:
+UTXOSet --> Transaction: validOutputs
+loop txid, outs := range validOutputs
+Transaction -> txID: hex.DecodeString(txid)
+	loop _, out := range outs
+		create input
+		Transaction -> input: TXInput{txID, out, wallet.PublicKey}
+		Transaction -> inputs: append(inputs, input)
+	end
+end
+Transaction -> outputs: append(outputs, *NewTXOutput(amount, to))
+create tx
+Transaction -> tx: Transaction{nil, inputs, outputs}
+Transaction -> tx: ID=tx.Hash()
+Transaction -> UTXOSet: Blockchain.SignTransaction(&tx, wallet.PrivateKey)
+Transaction --> cli: tx
+create cbTx
+cli -> cbTx: NewCoinbaseTX(from, "")
+create txs
+cli -> txs: []*Transaction{cbTx, tx}
+cli -> bc: MineBlock(txs)
+cli -> UTXOSet: Update(newBlock)
+@enduml
